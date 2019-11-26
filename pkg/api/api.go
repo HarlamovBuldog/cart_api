@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/HarlamovBuldog/cart_api/pkg/service"
@@ -9,6 +10,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
+// Server contains http handler and service interface with database interaction futures.
 type Server struct {
 	http.Handler
 	service service.Service
@@ -38,12 +40,14 @@ func (s *Server) createCart(w http.ResponseWriter, req *http.Request) {
 	cart, err := s.service.AddCart(req.Context())
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(w, "could not add cart: %s", err)
 		return
 	}
 
 	err = json.NewEncoder(w).Encode(cart)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(w, "could not encode json: %s", err)
 		return
 	}
 }
@@ -53,7 +57,7 @@ func (s *Server) addToCart(w http.ResponseWriter, req *http.Request) {
 	err := json.NewDecoder(req.Body).Decode(&item)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		_, _ = w.Write([]byte("could not decode request body"))
+		fmt.Fprintf(w, "could not decode request body: %s", err)
 		return
 	}
 
@@ -61,24 +65,26 @@ func (s *Server) addToCart(w http.ResponseWriter, req *http.Request) {
 	cartID, ok := vars["cart_id"]
 	if !ok {
 		w.WriteHeader(http.StatusBadRequest)
-		_, _ = w.Write([]byte("cart_id is not provided"))
+		fmt.Fprint(w, "cart_id is not provided")
 		return
 	}
 	if valid := isNewItemDataValid(item); !valid {
 		w.WriteHeader(http.StatusBadRequest)
-		_, _ = w.Write([]byte("data from request body is not valid"))
+		fmt.Fprint(w, "data from request body is not valid")
 		return
 	}
 
 	cartItem, err := s.service.AddItemToCart(req.Context(), cartID, item.ProductName, item.Quantity)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(w, "could not add item to cart: %s", err)
 		return
 	}
 
 	err = json.NewEncoder(w).Encode(cartItem)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(w, "could not encode json: %s", err)
 		return
 	}
 }
@@ -88,19 +94,20 @@ func (s *Server) removeFromCart(w http.ResponseWriter, req *http.Request) {
 	cartID, ok := vars["cart_id"]
 	if !ok {
 		w.WriteHeader(http.StatusBadRequest)
-		_, _ = w.Write([]byte("cart_id is not provided"))
+		fmt.Fprint(w, "cart_id is not provided")
 		return
 	}
 	itemID, ok := vars["item_id"]
 	if !ok {
 		w.WriteHeader(http.StatusBadRequest)
-		_, _ = w.Write([]byte("item_id is not provided"))
+		fmt.Fprint(w, "item_id is not provided")
 		return
 	}
 
 	err := s.service.RemoveItemFromCart(req.Context(), cartID, itemID)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(w, "could not remove item from cart: %s", err)
 		return
 	}
 }
@@ -110,19 +117,21 @@ func (s *Server) viewCart(w http.ResponseWriter, req *http.Request) {
 	cartID, ok := vars["cart_id"]
 	if !ok {
 		w.WriteHeader(http.StatusBadRequest)
-		_, _ = w.Write([]byte("cart_id is not provided"))
+		fmt.Fprint(w, "cart_id is not provided")
 		return
 	}
 
 	cart, err := s.service.Cart(req.Context(), cartID)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(w, "could not get cart: %s", err)
 		return
 	}
 
 	err = json.NewEncoder(w).Encode(cart)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(w, "could not encode json: %s", err)
 		return
 	}
 }

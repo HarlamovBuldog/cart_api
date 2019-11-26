@@ -12,7 +12,6 @@ import (
 )
 
 func TestAddCart(t *testing.T) {
-
 	tt := []struct {
 		name          string
 		initColParams initCollectionParams
