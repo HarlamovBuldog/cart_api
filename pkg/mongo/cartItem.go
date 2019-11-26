@@ -88,7 +88,7 @@ func (db *DB) ItemFromCart(ctx context.Context, cartID, cartItemID string) (*ser
 	if err != nil {
 		return nil, errors.Wrapf(err, "could not convert %s to ObjectID", cartItemID)
 	}
-	var cartItem service.CartItem
+	var cart service.Cart
 	err = db.Carts.FindOne(
 		ctx,
 		bson.D{
@@ -97,7 +97,7 @@ func (db *DB) ItemFromCart(ctx context.Context, cartID, cartItemID string) (*ser
 				"$elemMatch": bson.M{
 					"id": cartItemObjID},
 			}},
-		}).Decode(&cartItem)
+		}).Decode(&cart)
 
 	switch {
 	case err == mongo.ErrNoDocuments:
@@ -105,6 +105,13 @@ func (db *DB) ItemFromCart(ctx context.Context, cartID, cartItemID string) (*ser
 	case err != nil:
 		return nil, errors.Wrap(err, "could not decode document")
 	default:
-		return &cartItem, nil
+		var cartItemToReturn service.CartItem
+		for _, cartItem := range cart.Items {
+			if cartItem.ID == cartItemObjID {
+				cartItemToReturn = cartItem
+				break
+			}
+		}
+		return &cartItemToReturn, nil
 	}
 }
