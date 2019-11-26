@@ -9,14 +9,30 @@ import (
 	"time"
 
 	"github.com/HarlamovBuldog/cart_api/pkg/api"
+	"github.com/HarlamovBuldog/cart_api/pkg/config"
 	"github.com/HarlamovBuldog/cart_api/pkg/mongo"
 )
 
-func main() {
-	//dbConfig := new(config.DatabaseConfig)
-	//dbConfig.Load(config.SERVICENAME)
+const (
+	dbName  = "cart_api"
+	connStr = "mongodb://localhost:27018"
+)
 
-	db, err := mongo.Connect(context.Background(), "mongodb://localhost:27018", "cart_api")
+func main() {
+	dbConfig := new(config.DatabaseConfig)
+	dbConfig.Load(config.SERVICENAME)
+
+	var (
+		db  *mongo.DB
+		err error
+	)
+
+	if dbConfig.DBName != "" && dbConfig.ConnectionString != "" {
+		db, err = mongo.Connect(context.Background(), dbConfig.ConnectionString, dbConfig.DBName)
+	} else {
+		db, err = mongo.Connect(context.Background(), connStr, dbName)
+	}
+
 	if err != nil {
 		log.Fatal("could not connect to mongo")
 	}

@@ -1,18 +1,12 @@
 BINARY_NAME=cart-api
-COMPOSE_FILE=Docker-compose.yml
 GOLANGCI_LINT=bin/golangci-lint
 GOLANGCI_VER=v1.19.0
 
-RELEASE?=1.0.0
-GOOS?=linux
-GOARCH?=amd64
-
 HAS_LINTER := $(shell command -v golangci-lint;)
 
-.PHONY: buildStatic
-buildStatic:
-	GOPRIVATE=gitlab.itechart-group.com GO111MODULE=on GOOS=$(GOOS) GOARCH=$(GOARCH) \
-	go build -ldflags "-linkmode external -extldflags -static" -o $(BINARY_NAME) cmd/telegram-bot/main.go
+.PHONY: build
+build:
+	GO111MODULE=on go build -o $(BINARY_NAME) main.go
 
 .PHONY: bootstrap
 bootstrap:
@@ -43,7 +37,3 @@ clean:
 .PHONY: generate
 generate:
 	GO111MODULE=on go generate ./...
-
-.PHONY: compose-run
-compose-run:
-	docker-compose -f $(COMPOSE_FILE) up -d --force-recreate
